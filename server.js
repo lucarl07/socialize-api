@@ -126,7 +126,7 @@ const server = createServer((req, res) => {
       req.on('end', () => {
         const updtAccount = JSON.parse(body)
 
-        if (!body) {
+        if (!updtAccount) {
           return writeResponse(400, {
             message: "O corpo da solicitação está vazio. Por favor, preencha-o com dados."
           }, 'Bad Request: empty body returned.');
@@ -158,10 +158,47 @@ const server = createServer((req, res) => {
         })
       });
 
-    } else if (method === 'POST' && url === '/perfil/imagem') {
+    } else if (method === 'POST' && url.startsWith('/perfil/imagem/')) {
       console.log(`${method} ${url}`)
+
+      const id = url.split('/')[2]
+      console.log(`ID: ${id}`)
+
+      let body = "";
+
+      req.on('data', (chunk) => { body += chunk })
+      req.on('end', () => {
+        const profilePicture = JSON.parse(body)
+
+        if (!profilePicture) {
+          return writeResponse(400, {
+            message: "O corpo da solicitação está vazio. Por favor, preencha-o com dados."
+          }, 'Bad Request: empty body returned.');
+        }
+
+        const index = data.findIndex(user => user.id === id)
+
+        if (index === -1) {
+          return writeResponse(404, { 
+            mensagem: "Usuário não encontrado. Certifique-se que você digitou o ID correto." 
+          }, 'User not found.');
+        }
+
+        data[index].foto_perfil = profilePicture
+
+        writeData(data, (err) => {
+          if (err) {
+            return writeResponse(500, { 
+              mensagem: "Erro ao ler os dados. Por favor, tente novamente." 
+            }, 'An error ocurred while reading server data.');
+          }
+
+          writeResponse(201, data[index])
+        })
+      });
     } else if (method === 'GET' && url === '/usuarios') {
       console.log(`${method} ${url}`)
+      writeResponse(200, data);
     } else {
       writeResponse(404, {
         mensagem: "Página não encontrada. Por favor, verifique a URL e o método HTTP utilizado."
