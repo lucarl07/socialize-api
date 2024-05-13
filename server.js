@@ -39,7 +39,7 @@ const server = createServer((req, res) => {
 
           if (isEmailRepeated) {
             return writeResponse(400, { 
-              mensagem: "Dados inválidos: o email já existe na nossa base de dados." 
+              mensagem: "Dados inválidos: o e-mail já existe na nossa base de dados." 
             }, 'Error: Credentials matched with another existing account.');
           }
 
@@ -53,21 +53,111 @@ const server = createServer((req, res) => {
               }, 'An error ocurred while reading server data.');
             }
   
-            writeResponse(200, newAccount)
+            writeResponse(201, newAccount)
           })
         } else {
           return writeResponse(400, { 
-            mensagem: "Dados insuficientes. Por favor, não esqueça de digitar seu nome, senha e email." 
-          }, 'Not enough data was presented.');
+            mensagem: "Por favor, preencha seu nome, e-mail e senha antes de realizar o login." 
+          }, 'Request error: lacking necessary data');
         }
       })
 
     } else if (method === 'POST' && url === '/login') {
       console.log(`${method} ${url}`)
+
+      let body = "";
+
+      req.on('data', (chunk) => { body += chunk })
+      req.on('end', () => {
+        const userData = JSON.parse(body)
+
+        if (userData.hasOwnProperty('email') && userData.hasOwnProperty('senha')) {
+          const userAccount = data.find(account =>
+            account.email === userData.email &&
+            account.senha === userData.senha
+          );
+
+          if (!userAccount) {
+            return writeResponse(404, { 
+              mensagem: "Usuário não encontrado. Certifique-se que você digitou o nome e senha corretos." 
+            }, 'Login failed: user not found.');
+          } else {
+            return writeResponse(200, {
+              mensagem: `Bem-vindo de volta, ${userAccount.nome_usuario}!`,
+              perfil: userAccount
+            });
+          }
+        } else {
+          writeResponse(400, { 
+            mensagem: "Por favor, preencha todos os dados antes de realizar o login." 
+          }, 'Request error: lacking necessary data');
+        }
+      });
+
     } else if (method === 'GET' && url.startsWith('/perfil/')) {
       console.log(`${method} ${url}`)
+
+      const id = url.split('/')[2]
+      console.log(`ID: ${id}`)
+
+      const user = data.find(account => account.id === id)
+      
+      if (!user) {
+        writeResponse(404, { 
+          mensagem: "Usuário não encontrado. Certifique-se que você digitou o ID correto." 
+        }, 'User not found.');
+      } else {
+        writeResponse(200, {
+          nome_usuario: user.nome_usuario,
+          foto_perfil: user.foto_perfil,
+          bio: user.bio
+        });
+      }
+
     } else if (method === 'PUT' && url.startsWith('/perfil/')) {
       console.log(`${method} ${url}`)
+
+      const id = url.split('/')[2]
+      console.log(`ID: ${id}`)
+
+      let body = "";
+
+      req.on('data', (chunk) => { body += chunk })
+      req.on('end', () => {
+        const updtAccount = JSON.parse(body)
+
+        if (!body) {
+          return writeResponse(400, {
+            message: "O corpo da solicitação está vazio. Por favor, preencha-o com dados."
+          }, 'Bad Request: empty body returned.');
+        }
+
+        const index = data.findIndex(user => user.id === id)
+
+        if (index === -1) {
+          return writeResponse(404, { 
+            mensagem: "Usuário não encontrado. Certifique-se que você digitou o ID correto." 
+          }, 'User not found.');
+        }
+
+        data[index] = {
+          ...updtAccount,
+          email: data[index].email,
+          senha: data[index].senha,
+          id: data[index].id
+        }
+
+        writeData(data, (err) => {
+          if (err) {
+            return writeResponse(500, { 
+              mensagem: "Erro ao ler os dados. Por favor, tente novamente." 
+            }, 'An error ocurred while reading server data.');
+          }
+
+          writeResponse(201, data[index])
+        })
+      });
+
     } else if (method === 'POST' && url === '/perfil/imagem') {
       console.log(`${method} ${url}`)
     } else if (method === 'GET' && url === '/usuarios') {

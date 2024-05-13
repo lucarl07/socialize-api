@@ -1,8 +1,10 @@
 [
   {
-    "nome_usuario": "Risoto de Funghi",
+    "nome": "Risoto Transcendido",
+    "foto_perfil": "01010101010101011101101011011001011011010",
+    "bio": "Bom dia zap!",
+    "id": "5ba29d15-f4ce-4ea0-9652-8a47aebc645e",
     "email": "tudogostoso@email.com",
-    "senha": "i30jmoplpl",
-    "id": "5ba29d15-f4ce-4ea0-9652-8a47aebc645e"
+    "senha": "i30jmoplpl"
   }
 ]
