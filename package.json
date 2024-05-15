@@ -16,6 +16,7 @@
     "nodemon": "^3.1.0"
   },
   "dependencies": {
+    "formidable": "^3.5.1",
     "uuidv4": "^6.2.13"
   }
 }
